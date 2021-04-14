@@ -18,8 +18,14 @@
           <el-form-item label="微信号" prop="wxId">
             <el-input size="small" v-model="insertDialog.data.wxId"></el-input>
           </el-form-item>
-          <el-form-item label="年龄" prop="age">
-            <el-input size="small" v-model="insertDialog.data.age"></el-input>
+          <el-form-item label="出生日期" prop="birth">
+            <el-date-picker
+                v-model="insertDialog.data.birth"
+                type="date"
+                size="small"
+                placeholder="选择出生日期">
+            </el-date-picker>
+            <!--            <el-input size="small" v-model="insertDialog.data.birth"></el-input>-->
           </el-form-item>
           <el-form-item label="性别" prop="gender">
             <el-radio-group size="small" v-model="insertDialog.data.gender">
@@ -44,6 +50,7 @@
     </div>
 
     <el-table
+        v-loading="isTableLoading"
         :data="tableData">
       <el-table-column
           label="队员姓名"
@@ -62,28 +69,31 @@
       </el-table-column>
       <el-table-column
           label="微信号"
+          prop="wxId"
       >
       </el-table-column>
       <el-table-column
           label="手机号"
+          prop="phone"
       >
       </el-table-column>
       <el-table-column label="操作">
-                <template #default>
-                  <el-button
-                      type="text"
-                      size="small"
-                  >
-                    编辑
-                  </el-button>
+        <template #default="scope">
+          <el-button
+              type="text"
+              size="small"
+          >
+            编辑
+          </el-button>
 
-                  <el-button
-                      type="text"
-                      size="small"
-                  >
-                    删除
-                  </el-button>
-                </template>
+          <el-button
+              type="text"
+              size="small"
+              @click="onDeleteMemberButtonClick(scope.row)"
+          >
+            删除
+          </el-button>
+        </template>
       </el-table-column>
     </el-table>
 
@@ -93,10 +103,20 @@
 </template>
 
 <script>
+import api from "@/compose/api";
 export default {
   name: "MemberManage",
+  setup(){
+    const {getAllMembers, insertMember, deleteMember} = api()
+    return {
+      getAllMembers,
+      insertMember,
+      deleteMember
+    }
+  },
   data() {
     return {
+      isTableLoading: false,
       tableData: [
         // {
         //
@@ -108,7 +128,7 @@ export default {
           username: '',
           phone: '',
           wxId: '',
-          age: '',
+          birth: '',
           gender: '',
           address: ''
         },
@@ -122,8 +142,8 @@ export default {
           wxId: [
             {required: true, message: '请输入微信号', trigger: 'blur'}
           ],
-          age: [
-            {required: true, message: '请输入年龄', trigger: 'blur'}
+          birth: [
+            {required: true, message: '请输入出生日期', trigger: 'change'}
           ],
           gender: [
             {required: true, message: '请选择性别', trigger: 'change'}
@@ -136,22 +156,87 @@ export default {
     }
   },
   methods: {
+    onDeleteMemberButtonClick: function (member) {
+      this.deleteMember(this.$store.Authorization, member.uid)
+          .then(res => {
+            this.isTableLoading = false
+            console.log(res.data)
+            if(res.data.code === 0) {
+              this.$notify.success({
+                title: '成功',
+                message: '删除成功'
+              })
+
+              this.getMember()
+            }
+            else {
+              this.$notify.error({
+                title: '错误',
+                message: res.data.msg
+              });
+            }
+
+          }).catch(res => {
+        this.isTableLoading = false
+
+        if(res.message === 'Network Error') {
+          res.message = '网络连接超时'
+        }
+        this.$notify.error({
+          title: '错误',
+          message: res.message,
+          // showClose: false
+        });
+      })
+
+
+    },
     onSubmitInsertMemberButtonClick: function () {
       this.$refs['insertDialog'].validate(valid => {
         if(valid) {
+          this.isTableLoading = true
+          this.insertMember(this.$store.Authorization, {
+            birth: new Date(this.insertDialog.data.birth).Format('yyyy-MM-dd'),
+            ...this.insertDialog.data}
+          )
+              .then(res => {
+                this.isTableLoading = false
+                console.log(res.data)
+                if(res.data.code === 0) {
+                  this.$notify.success({
+                    title: '成功',
+                    message: '添加成功'
+                  })
 
-          this.tableData.push(Object.assign({}, this.insertDialog.data))
+                  setTimeout(() => {
+                    this.$refs['insertDialog'].resetFields()
+                    this.insertDialog.visible = false
 
-          this.$notify.success({
-            title: '成功',
-            message: '添加成功'
-          });
+                  }, 100)
 
-          setTimeout(() => {
-            this.$refs['insertDialog'].resetFields()
-            this.insertDialog.visible = false
+                  this.getMember()
+                }
+                else {
+                  this.$notify.error({
+                    title: '错误',
+                    message: res.data.msg
+                  });
+                }
 
-          }, 100)
+              }).catch(res => {
+            this.isTableLoading = false
+
+            if(res.message === 'Network Error') {
+              res.message = '网络连接超时'
+            }
+            this.$notify.error({
+              title: '错误',
+              message: res.message,
+              // showClose: false
+            });
+          })
+
+
         }
         else {
           return false
@@ -159,11 +244,14 @@ export default {
       })
     },
     getMember: function () {
-      this.$axios({
-        url: `/admin/member`,
-        method: 'get'
-      }).then(res => {
-        if(res.data.msg === 'ok') {
+      this.isTableLoading = true
+
+      this.getAllMembers(this.$store.Authorization).
+      then(res => {
+        this.isTableLoading = false
+
+        console.log(res)
+        if(res.data.code === 0) {
           this.tableData = res.data.data
         }
         else {
@@ -173,6 +261,8 @@ export default {
           });
         }
       }).catch(res => {
+        this.isTableLoading = false
+
         if(res.message === 'Network Error') {
           res.message = '网络连接超时'
         }

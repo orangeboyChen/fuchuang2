@@ -33,8 +33,18 @@
 </template>
 
 <script>
+import api from "@/compose/api";
+
+
 export default {
   name: "Login",
+  setup() {
+    const {login} = api()
+
+    return {
+      login
+    }
+  },
   data() {
     return {
       username: '',
@@ -62,7 +72,23 @@ export default {
   },
   methods: {
     onLoginButtonClick: function () {
-
+      this.login(this.username, this.password)
+      .then(res => {
+        if(res.data.code === 0) {
+          this.$store.dispatch('setToken', {Authorization: res.data.data.token})
+          this.$router.push('/')
+        }
+        else {
+          this.$store.dispatch('setToken', {Authorization: null})
+          this.$notify.error({
+            title: '登录失败',
+            message: res.data.msg
+          })
+        }
+      })
+      .catch(res => {
+        console.log(res)
+      })
     }
   }
 }

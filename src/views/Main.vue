@@ -86,6 +86,7 @@
 </template>
 
 <script>
+import api from "@/compose/api";
 export default {
   name: "Main",
   data() {
@@ -105,29 +106,39 @@ export default {
     };
   },
   setup() {
+    const {getBackgroundImages} = api()
 
+
+
+
+    return {
+      getBackgroundImages
+    }
   },
-  mounted() {
+  async mounted() {
+    await this.getBackgroundImages().then(res => {
+      console.log(res.data)
+      if (res.data.code === 0) {
+        this.urls = res.data.data
+      }
+    })
+
+
     let index = Math.floor(Math.random() * 6)
     this.backgroundImageUrl = `url("${this.urls[index]}")`
 
     let hour = new Date().getHours()
-    if( 7 <= hour && hour < 12) {
+    if (7 <= hour && hour < 12) {
       this.greeting = '早上好'
-    }
-    else if(12 <= hour && hour < 14) {
+    } else if (12 <= hour && hour < 14) {
       this.greeting = '中午好'
-    }
-    else if(14 <= hour && hour < 18) {
+    } else if (14 <= hour && hour < 18) {
       this.greeting = '下午好'
-    }
-    else if(18 <= hour && hour < 19) {
+    } else if (18 <= hour && hour < 19) {
       this.greeting = '傍晚好'
-    }
-    else if(19 <= hour && hour < 24) {
+    } else if (19 <= hour && hour < 24) {
       this.greeting = '晚上好'
-    }
-    else if(6 <= hour) {
+    } else if (6 <= hour) {
       this.greeting = '凌晨好'
     }
   },
@@ -140,7 +151,8 @@ export default {
         this.$router.push(index)
       }
     }
-  }
+  },
+
 }
 </script>
 
