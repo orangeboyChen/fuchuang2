@@ -33,17 +33,45 @@
 
 <script>
 import {baiduMap} from '@/plugins/baidumap.js'
+import api from "@/compose/api";
+
 export default {
   name: "MemberStatus",
-  mounted() {
+  data() {
+    return {
+      members: []
+    }
+  },
+  setup() {
+    const {getAllMembers} = api()
+
+    return {
+      getAllMembers
+    }
+  },
+  async mounted() {
+    await this.getAllMembers(this.$store.Authorization)
+    .then(res => {
+      console.log(res.data)
+      if(res.data.code === 0) {
+        this.members = res.data.data
+      }
+    })
+
     this.$nextTick(() => {
       baiduMap().then(() => {
         // 创建地图实例
         // eslint-disable-next-line no-undef
         this.map = new BMap.Map('map')
+        let latitude = 39.915
+        let longitude = 116.04
+        if(this.members.length > 0){
+          latitude = this.members[0].latitude
+          longitude = this.members[0].longitude
+        }
 
         // eslint-disable-next-line no-undef
-        this.map.centerAndZoom(new BMap.Point(116.404, 39.915), 11);
+        this.map.centerAndZoom(new BMap.Point(longitude, latitude), 11);
 
         // eslint-disable-next-line no-undef
         this.map.addControl(new BMap.MapTypeControl({
@@ -54,12 +82,57 @@ export default {
 
         this.map.enableScrollWheelZoom(true);
 
+
+        this.members.forEach(member => {
+          console.log(member)
+          // eslint-disable-next-line no-undef
+          let point = new BMap.Point(member.longitude, member.latitude)
+
+          // eslint-disable-next-line no-undef
+          let marker1 = new BMap.Marker(point);
+          this.map.addOverlay(marker1);
+
+          let opts = {
+            width: 250,
+            height: 100,
+            title: member.username
+          }
+
+          // eslint-disable-next-line no-undef
+          let infoWindow = new BMap.InfoWindow('地址：' + member.address, opts)
+
+          marker1.addEventListener('click', () => {
+            // eslint-disable-next-line no-undef
+            this.map.openInfoWindow(infoWindow, point)
+          })
+        })
+
         // eslint-disable-next-line no-undef
-        let marker1 = new BMap.Marker(new BMap.Point(116.204, 32.925));
+        let point = new BMap.Point(116.204, 32.925)
+
+        // eslint-disable-next-line no-undef
+        let marker1 = new BMap.Marker(point);
         this.map.addOverlay(marker1);
+
+        let opts = {
+          width: 250,
+          height: 100,
+          title: '123'
+        }
+
+        // eslint-disable-next-line no-undef
+        let infoWindow = new BMap.InfoWindow('456', opts)
+
+        marker1.addEventListener('click', () => {
+          // eslint-disable-next-line no-undef
+          this.map.openInfoWindow(infoWindow, point)
+        })
+
+
 
       });
     })
+
   }
 }
 </script>

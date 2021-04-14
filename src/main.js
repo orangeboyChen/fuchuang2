@@ -29,6 +29,18 @@ axios.interceptors.request.use(
         return Promise.reject(error);
     });
 
+axios.interceptors.response.use(
+    res => {
+        if (res.data.msg === '管理员未登录') {
+            router.push('/login')
+            res.data.msg = '请登录后使用'
+        }
+        return res
+    },
+    error => {
+        return Promise.reject(error)
+    }
+)
 axios.defaults.baseURL = 'https://api.fuchuang2.nowcent.cn'
 // axios.defaults.baseURL = 'http://localhost:8433'
 

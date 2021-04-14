@@ -159,6 +159,7 @@ export default {
     onDeleteMemberButtonClick: function (member) {
       this.deleteMember(this.$store.Authorization, member.uid)
           .then(res => {
+            console.log(res)
             this.isTableLoading = false
             console.log(res.data)
             if(res.data.code === 0) {
@@ -177,6 +178,8 @@ export default {
             }
 
           }).catch(res => {
+        console.log(res)
+
         this.isTableLoading = false
 
         if(res.message === 'Network Error') {

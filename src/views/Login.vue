@@ -39,17 +39,18 @@ import api from "@/compose/api";
 export default {
   name: "Login",
   setup() {
-    const {login} = api()
+    const {login, getBackgroundImages} = api()
 
     return {
-      login
+      login,
+      getBackgroundImages
     }
   },
   data() {
     return {
       username: '',
       password: '',
-      backgroundImageUrl: 'url("https://fuss10.elemecdn.com/3/28/bbf893f792f03a54408b3b7a7ebf0jpeg.jpeg")',
+      backgroundImageUrl: '',
       urls: [
         'https://fuss10.elemecdn.com/a/3f/3302e58f9a181d2509f3dc0fa68b0jpeg.jpeg',
         'https://fuss10.elemecdn.com/1/34/19aa98b1fcb2781c4fba33d850549jpeg.jpeg',
@@ -62,7 +63,16 @@ export default {
       ref: null
     }
   },
-  mounted() {
+  async mounted() {
+    await this.getBackgroundImages().then(res => {
+      if (res.data.code === 0) {
+        this.urls = res.data.data
+      }
+    })
+
+
+
+
     let index = Math.floor(Math.random() * 6)
     this.backgroundImageUrl = `url("${this.urls[index]}")`
 
