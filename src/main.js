@@ -29,7 +29,7 @@ axios.interceptors.request.use(
         return Promise.reject(error);
     });
 
-axios.defaults.baseURL = 'http://api.fuchuang2.nowcent.cn'
+axios.defaults.baseURL = 'https://api.fuchuang2.nowcent.cn'
 // axios.defaults.baseURL = 'http://localhost:8433'
 
 app.config.globalProperties.$axios = axios
