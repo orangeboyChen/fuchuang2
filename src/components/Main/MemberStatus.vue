@@ -7,21 +7,23 @@
       </el-tab-pane>
       <el-tab-pane label="常规">
         <div style="height: 20px"></div>
-        <el-table>
-          <el-table-column label="队员姓名">
+        <el-table :data="members">
+          <el-table-column label="队员姓名" prop="username">
 
           </el-table-column>
-          <el-table-column label="微信号">
+          <el-table-column label="微信号" prop="wxId">
 
           </el-table-column>
-          <el-table-column label="手机号">
+          <el-table-column label="手机号" prop="phone">
 
           </el-table-column>
-          <el-table-column label="当前位置">
+          <el-table-column label="当前位置" prop="address">
 
           </el-table-column>
           <el-table-column label="寻找对象">
-
+            <template #default="scope">
+              <span style="margin-right: 10px" v-for="(singleCase) in scope.row.cases" :key="singleCase.requestId">{{singleCase.lostName}}</span>
+            </template>
           </el-table-column>
         </el-table>
       </el-tab-pane>
@@ -105,29 +107,8 @@ export default {
             // eslint-disable-next-line no-undef
             this.map.openInfoWindow(infoWindow, point)
           })
+
         })
-
-        // eslint-disable-next-line no-undef
-        let point = new BMap.Point(116.204, 32.925)
-
-        // eslint-disable-next-line no-undef
-        let marker1 = new BMap.Marker(point);
-        this.map.addOverlay(marker1);
-
-        let opts = {
-          width: 250,
-          height: 100,
-          title: '123'
-        }
-
-        // eslint-disable-next-line no-undef
-        let infoWindow = new BMap.InfoWindow('456', opts)
-
-        marker1.addEventListener('click', () => {
-          // eslint-disable-next-line no-undef
-          this.map.openInfoWindow(infoWindow, point)
-        })
-
 
 
       });
