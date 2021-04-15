@@ -17,7 +17,7 @@
           <div style="height: 70px"></div>
           <span style="margin-left: -10px">救援成功率</span><br>
           <div style="height: 10px"></div>
-          <span class="success-rate-font">23%</span>
+          <span class="success-rate-font">{{ successRate }}%</span>
         </div>
         <div style="height: 20px"></div>
       </el-col>
@@ -28,6 +28,8 @@
 
 <script>
 import {baiduMap} from '@/plugins/baidumap.js'
+import api from "@/compose/api";
+
 
 export default {
   name: "Statistics",
@@ -35,20 +37,35 @@ export default {
     return {
       map: null,
       lostElderChart: null,
-      caseChart: null
+      caseChart: null,
+      tasks: [],
+      caseTypeCategory: [0, 0, 0],
+      successRate: '--'
     }
   },
   setup() {
+    const {getTasks} = api()
+
+    return {
+      getTasks
+    }
   },
-  mounted() {
-    this.$nextTick(() => {
+  async mounted() {
+    await this.getAllTasks()
+    await this.$nextTick(() => {
       baiduMap().then(() => {
         // 创建地图实例
         // eslint-disable-next-line no-undef
         this.map = new BMap.Map('map')
+        let latitude = 39.915
+        let longitude = 116.04
+        if(this.tasks.length > 0){
+          latitude = this.tasks[0].latitude
+          longitude = this.tasks[0].longitude
+        }
 
         // eslint-disable-next-line no-undef
-        this.map.centerAndZoom(new BMap.Point(116.404, 39.915), 4);
+        this.map.centerAndZoom(new BMap.Point(longitude, latitude), 11);
 
         // eslint-disable-next-line no-undef
         this.map.addControl(new BMap.MapTypeControl({
@@ -59,51 +76,51 @@ export default {
 
         this.map.enableScrollWheelZoom(true);
 
-        // eslint-disable-next-line no-undef
-        let marker1 = new BMap.Marker(new BMap.Point(116.204, 32.925));
-        this.map.addOverlay(marker1);
 
-      });
+        this.tasks.forEach(task => {
+          // eslint-disable-next-line no-undef
+          let point = new BMap.Point(task.longitude, task.latitude)
+
+          // eslint-disable-next-line no-undef
+          let marker1 = new BMap.Marker(point);
+          this.map.addOverlay(marker1);
+
+          let opts = {
+            width: 250,
+            height: 100,
+            title: task.lostName
+          }
+
+          // eslint-disable-next-line no-undef
+          let infoWindow = new BMap.InfoWindow('地址：' + task.lostAddress, opts)
+
+          marker1.addEventListener('click', () => {
+            // eslint-disable-next-line no-undef
+            this.map.openInfoWindow(infoWindow, point)
+          })
+
+        });
+      })
+
+
+      this.lostElderChart = this.$root.echarts.init(
+          document.getElementById("lost-elders")
+      )
+
+
     })
 
 
-    this.lostElderChart = this.$root.echarts.init(
-        document.getElementById("lost-elders")
-    )
-
-    this.lostElderChart.setOption( {
-      dataset: [{
-        dimensions: ['name', 'age', 'profession', 'score', 'date'],
-        source: [
-          [' Hannah Krause ', 41, 'Engineer', 314, '2011-02-12'],
-          ['Zhao Qian ', 20, 'Teacher', 351, '2011-03-01'],
-          [' Jasmin Krause ', 52, 'Musician', 287, '2011-02-14'],
-          ['Li Lei', 37, 'Teacher', 219, '2011-02-18'],
-          [' Karle Neumann ', 25, 'Engineer', 253, '2011-04-02'],
-          [' Adrian Groß', 19, 'Teacher', null, '2011-01-16'],
-          ['Mia Neumann', 71, 'Engineer', 165, '2011-03-19'],
-          [' Böhm Fuchs', 36, 'Musician', 318, '2011-02-24'],
-          ['Han Meimei ', 67, 'Engineer', 366, '2011-03-12'],
-        ]
-      }, {
-        transform: {
-          type: 'sort',
-          config: { dimension: 'score', order: 'desc' }
-        }
-      }],
-      xAxis: {
-        type: 'category',
-        axisLabel: { interval: 0, rotate: 30 },
-      },
-      yAxis: {},
-      series: {
-        type: 'bar',
-        encode: { x: 'name', y: 'score' },
-        datasetIndex: 1
-      }
-    })
 
 
+
+    this.initLostElderChart()
+
+    let result = await this.getTaskCategory()
+
+
+
+    console.log(result)
     this.caseChart = this.$root.echarts.init(
         document.getElementById("case")
     )
@@ -130,63 +147,107 @@ export default {
             show: false
           },
           data: [
-            {value: 1048, name: '搜索引擎'},
-            {value: 735, name: '直接访问'},
-            {value: 580, name: '邮件营销'},
-            {value: 484, name: '联盟广告'},
-            {value: 300, name: '视频广告'}
+            {value: result[0], name: '未受理'},
+            {value: result[1], name: '进行中'},
+            {value: result[2], name: '已完成'}
           ]
         }
       ]
     })
 
+    this.successRate = result[2] / (result[0] + result[1] + result[2]) * 100
+
     window.addEventListener("resize", () => {
       this.caseChart.resize()
 
-      this.lostElderChart = this.$root.echarts.init(
-          document.getElementById("lost-elders")
-      )
-
-      this.lostElderChart.setOption( {
-        dataset: [{
-          dimensions: ['name', 'age', 'profession', 'score', 'date'],
-          source: [
-            [' Hannah Krause ', 41, 'Engineer', 314, '2011-02-12'],
-            ['Zhao Qian ', 20, 'Teacher', 351, '2011-03-01'],
-            [' Jasmin Krause ', 52, 'Musician', 287, '2011-02-14'],
-            ['Li Lei', 37, 'Teacher', 219, '2011-02-18'],
-            [' Karle Neumann ', 25, 'Engineer', 253, '2011-04-02'],
-            [' Adrian Groß', 19, 'Teacher', null, '2011-01-16'],
-            ['Mia Neumann', 71, 'Engineer', 165, '2011-03-19'],
-            [' Böhm Fuchs', 36, 'Musician', 318, '2011-02-24'],
-            ['Han Meimei ', 67, 'Engineer', 366, '2011-03-12'],
-          ]
-        }, {
-          transform: {
-            type: 'sort',
-            config: { dimension: 'score', order: 'desc' }
-          }
-        }],
-        xAxis: {
-          type: 'category',
-          axisLabel: { interval: 0, rotate: 30 },
-        },
-        yAxis: {},
-        series: {
-          type: 'bar',
-          encode: { x: 'name', y: 'score' },
-          datasetIndex: 1
-        }
-      })
+      this.initLostElderChart()
       this.lostElderChart.resize()
 
 
 
 
     });
+  },
+  methods: {
+    initLostElderChart: function () {
+      //准备数据
+      let casesTotalFromAges = [0, 0, 0, 0, 0, 0]
+
+      for(let index in this.tasks) {
+        let age = this.tasks[index].lostAge
+        if(age < 60) {
+          casesTotalFromAges[0]++
+        }
+        else if (60 <= age < 70) {
+          casesTotalFromAges[1]++
+        }
+        else if (70 <= age < 80) {
+          casesTotalFromAges[2]++
+        }
+        else if (80 <= age < 90) {
+          casesTotalFromAges[3]++
+        }
+        else if (90 <= age < 100) {
+          casesTotalFromAges[4]++
+        }
+        else if (100 <= age) {
+          casesTotalFromAges[5]++
+        }
+
+      }
 
 
-
+      this.lostElderChart.setOption( {
+        xAxis: {
+          type: 'category',
+          axisLabel: { interval: 0, rotate: 30 },
+          data: [
+            '小于60岁',
+            '60~70岁',
+            '70~80岁',
+            '80~90岁',
+            '90~100岁',
+            '大于100岁'
+          ]
+        },
+        yAxis: {},
+        series: {
+          type: 'bar',
+          datasetIndex: 0,
+          data: casesTotalFromAges
+        }
+      })
+    },
+    getAllTasks: async function () {
+      await this.getTasks(this.$store.Authorization, {})
+          .then(res => {
+            if(res.data.code === 0) {
+              this.tasks = res.data.data
+            }
+          })
+    },
+    getTaskCategory: async function () {
+      let caseTypeCategory = [0, 0, 0]
+      await this.getTasks(this.$store.Authorization, {status: 0})
+          .then(res => {
+            if(res.data.code === 0) {
+              caseTypeCategory[0] = res.data.data.length
+            }
+          })
+      await this.getTasks(this.$store.Authorization, {status: 1})
+          .then(res => {
+            if(res.data.code === 0) {
+              caseTypeCategory[1] = res.data.data.length
+            }
+          })
+      await this.getTasks(this.$store.Authorization, {status: 2})
+          .then(res => {
+            if(res.data.code === 0) {
+              caseTypeCategory[2] = res.data.data.length
+            }
+          })
+      return caseTypeCategory
+    }
   }
 }
 </script>

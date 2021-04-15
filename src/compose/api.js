@@ -38,6 +38,22 @@ export default function api() {
         })
     }
 
+    const updateMember = (token, uid, {address, birth, gender, phone, username, wxId}) => {
+        return axios({
+            url: `/admin/user/member/${uid}`,
+            method: 'post',
+            data: {
+                address,
+                birth,
+                gender,
+                phone,
+                username,
+                wxId
+            }
+        })
+    }
+
+
     const deleteMember = (token, uid) => {
         return axios({
             url: `/admin/user/member/${uid}`,
@@ -55,12 +71,39 @@ export default function api() {
         })
     }
 
+    const getTasks = (token, {status, uid}) => {
+        return axios({
+            url: `/task`,
+            method: 'get',
+            headers: {
+                Authorization: token
+            },
+            params: {
+                status,
+                uid
+            }
+        })
+    }
+
+    const getTask = (token, requestId) => {
+        return axios({
+            url: `/task/${requestId}`,
+            method: 'get',
+            headers: {
+                Authorization: token
+            }
+        })
+    }
+
 
     return {
         login,
         getAllMembers,
         insertMember,
         deleteMember,
-        getBackgroundImages
+        getBackgroundImages,
+        updateMember,
+        getTasks,
+        getTask
     }
 }

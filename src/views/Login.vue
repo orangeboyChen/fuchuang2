@@ -71,13 +71,14 @@ export default {
     })
 
 
-
-
     let index = Math.floor(Math.random() * 6)
     this.backgroundImageUrl = `url("${this.urls[index]}")`
 
     if(this.$route.query.ref){
       this.ref = this.$route.query.ref
+      if(this.ref === '/login') {
+        this.ref = null
+      }
     }
   },
   methods: {
@@ -86,7 +87,8 @@ export default {
       .then(res => {
         if(res.data.code === 0) {
           this.$store.dispatch('setToken', {Authorization: res.data.data.token})
-          this.$router.push('/')
+
+          this.$router.push(this.ref ? this.ref : '/')
         }
         else {
           this.$store.dispatch('setToken', {Authorization: null})

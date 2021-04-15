@@ -32,7 +32,11 @@ axios.interceptors.request.use(
 axios.interceptors.response.use(
     res => {
         if (res.data.msg === '管理员未登录') {
-            router.push('/login')
+            localStorage.setItem('Authorization', null)
+            store.dispatch('setToken', {Authorization: null})
+
+
+            router.push(`/login?ref=${encodeURI(window.location.pathname)}`)
             res.data.msg = '请登录后使用'
         }
         return res
