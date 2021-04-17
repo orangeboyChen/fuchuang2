@@ -155,7 +155,7 @@ export default {
       ]
     })
 
-    this.successRate = result[2] / (result[0] + result[1] + result[2]) * 100
+    this.successRate = Math.round((result[2] / (result[0] + result[1] + result[2]) * 100) * 100) / 100
 
     window.addEventListener("resize", () => {
       this.caseChart.resize()

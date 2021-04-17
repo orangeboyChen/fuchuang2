@@ -29,7 +29,7 @@
           {{new Date(scope.row.gmtCreate).Format('yyyy-MM-dd hh:mm:ss')}}
         </template>
       </el-table-column>
-      <el-table-column label="参与搜救、寻找人数">
+      <el-table-column label="参与搜救、寻找人数" prop="rescueNum">
 
       </el-table-column>
 
@@ -39,12 +39,12 @@
       >
         <template #default="scope">
           <el-popover
-              placement="left-start"
-              :width="800"
+              placement="left"
+              :width="600"
               trigger="click"
 
           >
-            <el-image style="height: 450px" :src="detailDialog.imageUrl"/>
+            <el-image style="height: 350px" :src="detailDialog.photo"/>
 
             <!--            <el-carousel height="500px">-->
 <!--              <el-carousel-item v-for="item in 1" :key="item">-->
@@ -113,7 +113,7 @@ export default {
       await this.getTask(this.$store.Authorization, this.tableData[index].requestId)
           .then(res => {
             console.log(res.data)
-            this.detailDialog.imageUr = res.data.data.image
+            this.detailDialog.photo = res.data.data.photo
             this.detailDialog.info = res.data.data.detail
 
           })

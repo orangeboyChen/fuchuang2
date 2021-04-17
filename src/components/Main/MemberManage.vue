@@ -79,10 +79,10 @@
           prop="phone"
       >
       </el-table-column>
-      <el-table-column label="操作">
+      <el-table-column label="操作" fixed="right">
         <template #default="scope">
           <el-popover width="100"
-
+                      placement="left"
           >
             <el-space direction="vertical" alignment="left" :size="25">
               <el-space>

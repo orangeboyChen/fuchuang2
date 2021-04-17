@@ -64,6 +64,11 @@ export default {
     }
   },
   async mounted() {
+    if(localStorage.getItem('Authorization') !== null) {
+      this.$router.push('/')
+      return
+    }
+
     await this.getBackgroundImages().then(res => {
       if (res.data.code === 0) {
         this.urls = res.data.data

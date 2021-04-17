@@ -64,6 +64,8 @@ const router = createRouter({
 })
 
 router.beforeEach(((to, from, next) => {
+  document.title = '救援管理'
+  console.log(to.path)
   if(to.path === '/login') {
     next()
   }
